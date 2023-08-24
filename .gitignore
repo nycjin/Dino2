@@ -79,3 +79,6 @@ crashlytics-build.properties
 
 # Mirror Library
 /[Aa]ssets/Mirror/*
+
+# Temp files
+/TempToRemove
