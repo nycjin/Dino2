@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class DuckingState : StateMachineBehaviour
 {
-    private CircleCollider2D circle;
-    private CapsuleCollider2D capsule;
+    CircleCollider2D circle;
+    CapsuleCollider2D capsule;
 
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
-    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         circle = animator.gameObject.GetComponent<CircleCollider2D>();
         capsule = animator.gameObject.GetComponent<CapsuleCollider2D>();
@@ -24,7 +24,7 @@ public class DuckingState : StateMachineBehaviour
     //}
 
     // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
-    override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         circle.enabled = true;
         capsule.enabled = false;
