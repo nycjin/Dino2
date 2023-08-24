@@ -1,32 +1,42 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
+using Interface;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.Serialization;
 
-public class Moon : MonoBehaviour
+namespace forPrefab
 {
-    [SerializeField] List<Sprite> MoonPhase;
-    [SerializeField] int _iPhase;
-    
-    SpriteRenderer _renderer;
-
-    void Start()
+    public class Moon : MonoBehaviour, IInjectable
     {
-        _renderer = GetComponent<SpriteRenderer>();
+        [SerializeField] List<Sprite> MoonPhase;
+        int _iPhase;
 
-        GlobalLogic.CurrentLogic.OnDayShift.AddListener(PhaseShift);
-        
-        gameObject.SetActive( false );
-    }
+        SpriteRenderer _renderer;
 
-    void PhaseShift()
-    {
-        if ( GlobalLogic.CurrentLogic.IsNight )
+        readonly InjectHandler _injectHandler = new();
+        ILogic CurrentLogic => _injectHandler.CurrentLogic;
+        public void SetLogic(ILogic logic) => _injectHandler.SetLogic(logic);
+
+
+        IEnumerator Start()
         {
-            _iPhase = ( _iPhase + 1 ) % MoonPhase.Count;
-            _renderer.sprite = MoonPhase[ _iPhase ];
+            while ( CurrentLogic == null )
+            {
+                yield return null;
+            }
+            
+            _renderer = GetComponent<SpriteRenderer>();
+            CurrentLogic.OnDayShift.AddListener(PhaseShift);
         }
-        gameObject.SetActive( !gameObject.activeSelf );
+
+        void PhaseShift()
+        {
+            if ( _renderer.enabled )
+            {
+                _iPhase = ( _iPhase + 1 ) % MoonPhase.Count;
+                _renderer.sprite = MoonPhase[ _iPhase ];
+            }
+
+            _renderer.enabled = !_renderer.enabled;
+        }
     }
 }

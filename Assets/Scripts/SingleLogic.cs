@@ -1,42 +1,43 @@
+using Interface;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
-public class SingleLogic : MonoBehaviour, ILogic // Logic을 상속한다면??
+// Logic Manager of single-mode
+public class SingleLogic : MonoBehaviour, ILogic
 {
-    public static SingleLogic Instance { get; private set; }
-    public UnityEvent OnDayShift { get; } = new(); // Event Listener for Moon phase
+    [SerializeField] float moveSpeed = 3.7f;
+    [SerializeField] bool isNight;
+    [SerializeField] float dayShiftInterval = 30f;
+    [SerializeField] float speedIncreaseInterval = 50f;
 
-    [SerializeField] bool _isNight;
-    [SerializeField] float _moveSpeed = 3.7f; // 기준 게임 속도. 점점 증가.
-    [SerializeField] double _playerScore;
-    const float SPEED_INCREASE_INTERVAL = 10f;
-    const float DAY_SHIFT_INTERVAL = 100f;
+    [SerializeField] Canvas gameOverCanvas;
+    [SerializeField] Text scoreText;
+    [SerializeField] Camera playerCamera;
+    [SerializeField] GameObject dinoPrefab;
+
     float _speedIntervalElapsed;
     float _dayTimeElapsed;
 
-    [SerializeField] GameObject gameOverScreen;
-    [SerializeField] Text scoreText;
-    [SerializeField] Camera _camera;
-
-    [SerializeField] GameObject _dinoSingle; // 이걸로 Instantiate 하자
-
-    public bool IsNight => _isNight;
-    public float MoveSpeed => _moveSpeed;
-
-    public GameObject DinoPrefab => _dinoSingle;
+    public UnityEvent OnDayShift { get; private set; }
+    public float MoveSpeed => moveSpeed;
+    public float GameScore { get; private set; }
 
     void Awake()
     {
-        if ( Instance != null && Instance != this )
+        OnDayShift = new UnityEvent();
+
+        // Because the "Tag" of player prefab is "Player", so it needs to be injected with logic.
+        var script = dinoPrefab.GetComponent<IInjectable>();
+        if ( script != null )
         {
-            Destroy(( this ));
+            script.SetLogic(this);
         }
         else
         {
-            Instance = this;
-            // TODO: Instantiate Prefab.
+            Debug.LogError("dinoPrefab is null!");
         }
     }
 
@@ -49,9 +50,9 @@ public class SingleLogic : MonoBehaviour, ILogic // Logic을 상속한다면??
 
     void IncreaseSpeed()
     {
-        if ( _speedIntervalElapsed > SPEED_INCREASE_INTERVAL )
+        if ( _speedIntervalElapsed > speedIncreaseInterval )
         {
-            _moveSpeed += 0.5f; // 시간당 이동 좌표
+            moveSpeed += 0.5f; // 시간당 이동 좌표
             _speedIntervalElapsed = 0;
         }
         else
@@ -62,40 +63,33 @@ public class SingleLogic : MonoBehaviour, ILogic // Logic을 상속한다면??
 
     void AddScore()
     {
-        _playerScore += Time.deltaTime * _moveSpeed;
-        _dayTimeElapsed += Time.deltaTime * _moveSpeed; //
-        scoreText.text = ( ( int )_playerScore ).ToString();
+        GameScore += moveSpeed * Time.deltaTime;
+
+        scoreText.text = ( ( int )GameScore ).ToString();
     }
 
     void ShiftDaylight()
     {
-        if ( _dayTimeElapsed < DAY_SHIFT_INTERVAL * _moveSpeed ) // change to 200
+        if ( _dayTimeElapsed < dayShiftInterval * moveSpeed )
         {
+            _dayTimeElapsed += moveSpeed * Time.deltaTime;
             return;
         }
 
-        _camera.backgroundColor = _isNight ? new Color32(247, 247, 247, 0) : new Color32(0, 0, 0, 0);
-
         _dayTimeElapsed = 0;
-        _isNight = !_isNight;
-        
-        OnDayShift?.Invoke();
+
+        playerCamera.backgroundColor = isNight ? new Color32(247, 247, 247, 0) : new Color32(0, 0, 0, 0);
+        isNight = !isNight;
+        OnDayShift.Invoke();
     }
 
     public void GameOver()
     {
-        gameOverScreen.SetActive(true);
+        gameOverCanvas.enabled = true;
     }
 
     public void Restart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        _playerScore = 0;
-        Time.timeScale = 1;
-
-        if ( gameOverScreen.activeSelf )
-        {
-            gameOverScreen.SetActive(false);
-        }
     }
 }

@@ -1,43 +1,38 @@
+using Interface;
 using Mirror;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class MultiLogic : MonoBehaviour, ILogic
+// Logic Manager of multi-mode
+public class MultiLogic : NetworkBehaviour, ILogic
 {
-    public static MultiLogic Instance { get; private set; }
-    public UnityEvent OnDayShift { get; } = new(); // Event Listener for Moon phase
+    [SyncVar] [SerializeField] float moveSpeed = 3.7f;
+    [SerializeField] bool isNight;
+    [SerializeField] float dayShiftInterval = 30f;
+    [SerializeField] float speedIncreaseInterval = 50f;
 
-    [SerializeField] bool _isNight;
-    [SerializeField] float _moveSpeed = 3.7f; // 기준 게임 속도. 점점 증가.
-    [SerializeField] double _playerScore;
-    [SerializeField] double DAY_SHIFT_INTERVAL = 100;
-    [SerializeField] float SPEED_INCREASE_INTERVAL = 10f;
+    [SerializeField] Canvas gameOverCanvas;
+    [SerializeField] Text scoreText;
+    [SerializeField] Camera playerCamera;
+    [SerializeField] GameObject dinoPrefab;
+
     float _speedIntervalElapsed;
     float _dayTimeElapsed;
 
-    [SerializeField] GameObject gameOverScreen;
-    [SerializeField] Text scoreText;
-    [SerializeField] Camera _camera;
-
-    [SerializeField] GameObject _dinoPrefab; //
-
-    public bool IsNight => _isNight;
-    public float MoveSpeed => _moveSpeed;
-
-    public GameObject DinoPrefab => _dinoPrefab;
+    public UnityEvent OnDayShift { get; private set; }
+    public float MoveSpeed => moveSpeed;
+    public float GameScore { get; private set; }
 
     void Awake()
     {
-        if ( Instance != null && Instance != this )
-        {
-            Destroy(( this ));
-        }
-        else
-        {
-            Instance = this;
-        }
+        OnDayShift = new UnityEvent();
+
+        // Tag of player prefab is "Player", so it needs to be injected with logic.
+        // However, in Multi-mode, CustomNetworkManager handles it,
+        // so the prefab is instantiated dynamically after the network is connected.
     }
 
     void Update()
@@ -49,9 +44,9 @@ public class MultiLogic : MonoBehaviour, ILogic
 
     void IncreaseSpeed()
     {
-        if ( _speedIntervalElapsed > SPEED_INCREASE_INTERVAL )
+        if ( _speedIntervalElapsed > speedIncreaseInterval )
         {
-            _moveSpeed += 0.5f; // 시간당 이동 좌표
+            moveSpeed += 0.5f; // 시간당 이동 좌표
             _speedIntervalElapsed = 0;
         }
         else
@@ -62,41 +57,34 @@ public class MultiLogic : MonoBehaviour, ILogic
 
     void AddScore()
     {
-        _playerScore += Time.deltaTime * _moveSpeed;
-        _dayTimeElapsed += Time.deltaTime * _moveSpeed; //
-        scoreText.text = ( ( int )_playerScore ).ToString();
+        GameScore += moveSpeed * Time.deltaTime;
+
+        scoreText.text = ( ( int )GameScore ).ToString();
     }
 
     void ShiftDaylight()
     {
-        if ( _dayTimeElapsed < DAY_SHIFT_INTERVAL * _moveSpeed ) // change to 200
+        if ( _dayTimeElapsed < dayShiftInterval * moveSpeed )
         {
+            _dayTimeElapsed += moveSpeed * Time.deltaTime;
             return;
         }
 
-        _camera.backgroundColor = _isNight ? new Color32(247, 247, 247, 0) : new Color32(0, 0, 0, 0);
-
         _dayTimeElapsed = 0;
-        _isNight = !_isNight;
-        
-        OnDayShift?.Invoke();
+
+        playerCamera.backgroundColor = isNight ? new Color32(247, 247, 247, 0) : new Color32(0, 0, 0, 0);
+        isNight = !isNight;
+        OnDayShift.Invoke();
     }
 
     public void GameOver()
     {
-        gameOverScreen.SetActive(true);
+        gameOverCanvas.enabled = true;
     }
 
     public void Restart()
     {
         Debug.Log("Restart button pressed!"); //
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        _playerScore = 0;
-        Time.timeScale = 1;
-
-        if ( gameOverScreen.activeSelf )
-        {
-            gameOverScreen.SetActive(false);
-        }
     }
 }

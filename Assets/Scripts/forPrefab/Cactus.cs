@@ -1,22 +1,31 @@
-using System.Collections;
-using System.Collections.Generic;
+using Interface;
 using UnityEngine;
 
-public class Cactus : MonoBehaviour
+namespace forPrefab
 {
-    [SerializeField] float deadZone = -10;
-    void Start()
+    public class Cactus : MonoBehaviour, IInjectable
     {
+        const float DeadZone = -10;
+
+        readonly InjectHandler _injectHandler = new();
+        ILogic CurrentLogic => _injectHandler.CurrentLogic;
+        public void SetLogic(ILogic logic) => _injectHandler.SetLogic(logic);
+
+
+        void Update()
+        {
+            if ( CurrentLogic == null )
+            {
+                Debug.LogWarning($"CurrentLogic is not set yet on {gameObject.name}");
+                return;
+            } 
+            
+            var gameMoveSpeed = CurrentLogic.MoveSpeed;
+            transform.position += Vector3.left * (gameMoveSpeed * Time.deltaTime);
         
-    }
-
-    void Update()
-    {
-        var moveSpeed = GlobalLogic.CurrentLogic.MoveSpeed;
-        transform.position += Vector3.left * (GlobalLogic.CurrentLogic.MoveSpeed * Time.deltaTime);
-
-        if( transform.position.x <= deadZone ) {
-            Destroy( gameObject );
+            if( transform.position.x <= DeadZone ) {
+                Destroy( gameObject );
+            }
         }
     }
 }
