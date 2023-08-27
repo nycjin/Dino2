@@ -1,6 +1,7 @@
-# Dino2
+# Dino Multi Runner
 
-A personal project that pays homage to the game Chrome Dino.
+## Introduce
+본 게임은 크롬 다이노 게임에서 영감을 받아 제작한 멀티플레이 게임입니다.
 
 
 ## Unity
