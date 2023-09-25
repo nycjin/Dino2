@@ -7,10 +7,10 @@ A personal project that pays homage to the game Chrome Dinosaur.
 
 
 ## Single-mode demo
-<img width="80%" src="https://github.com/nycjin/Dino2/assets/59915187/2aa685af-f1be-461b-abd3-6d0f95b730ef"/>
+<video width="80%" src="https://github.com/nycjin/Dino2/assets/59915187/2aa685af-f1be-461b-abd3-6d0f95b730ef"/>
 
 ## Multimode Demo
-<img width="80%" src="https://github.com/nycjin/Dino2/assets/59915187/8a2817d6-8a7b-4b9e-a640-7f5dbd8c63aa"/>
+<video width="80%" src="https://github.com/nycjin/Dino2/assets/59915187/8a2817d6-8a7b-4b9e-a640-7f5dbd8c63aa"/>
 
 
 ## Game Features Mind Map
